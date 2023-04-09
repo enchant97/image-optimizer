@@ -16,38 +16,44 @@ func main() {
 
 	jobs := make([]ImageJob, 0)
 
-	panicOnError(filepath.Walk(appConfig.OriginalsPath, func(path string, info os.FileInfo, err error) error {
+	panicOnError(filepath.WalkDir(appConfig.OriginalsPath, func(path string, info os.DirEntry, err error) error {
 		if err != nil {
 			return err
 		}
 
 		if !info.IsDir() {
-			log.Println("adding job(s) for", info.Name())
+			srcBasePath, _ := filepath.Rel(appConfig.OriginalsPath, path)
+			srcBasePath = filepath.Dir(srcBasePath)
+			optimizedPath := filepath.Join(appConfig.OptimizedPath, srcBasePath)
+			os.MkdirAll(optimizedPath, os.ModePerm)
+
+			log.Println("adding job(s) for", path)
+
 			jobs = append(jobs,
 				ImageJob{
 					OriginalPath:     path,
-					OptimizedPath:    filepath.Join(appConfig.OptimizedPath, info.Name()+"@large.webp"),
+					OptimizedPath:    filepath.Join(optimizedPath, info.Name()+"@large.webp"),
 					OptimizedType:    bimg.WEBP,
 					OptimizedQuality: 80,
 					OptimizedMaxSize: appConfig.ImageSizes.Large,
 				},
 				ImageJob{
 					OriginalPath:     path,
-					OptimizedPath:    filepath.Join(appConfig.OptimizedPath, info.Name()+"@medium.webp"),
+					OptimizedPath:    filepath.Join(optimizedPath, info.Name()+"@medium.webp"),
 					OptimizedType:    bimg.WEBP,
 					OptimizedQuality: 80,
 					OptimizedMaxSize: appConfig.ImageSizes.Medium,
 				},
 				ImageJob{
 					OriginalPath:     path,
-					OptimizedPath:    filepath.Join(appConfig.OptimizedPath, info.Name()+"@small.webp"),
+					OptimizedPath:    filepath.Join(optimizedPath, info.Name()+"@small.webp"),
 					OptimizedType:    bimg.WEBP,
 					OptimizedQuality: 60,
 					OptimizedMaxSize: appConfig.ImageSizes.Small,
 				},
 				ImageJob{
 					OriginalPath:     path,
-					OptimizedPath:    filepath.Join(appConfig.OptimizedPath, info.Name()+"@thumbnail.webp"),
+					OptimizedPath:    filepath.Join(optimizedPath, info.Name()+"@thumbnail.webp"),
 					OptimizedType:    bimg.WEBP,
 					OptimizedQuality: 20,
 					OptimizedMaxSize: appConfig.ImageSizes.Thumbnail,
