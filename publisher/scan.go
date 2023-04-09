@@ -6,7 +6,6 @@ import (
 
 	"github.com/enchant97/image-optimizer/config"
 	"github.com/enchant97/image-optimizer/core"
-	"github.com/h2non/bimg"
 )
 
 type ScannedJobResult struct {
@@ -37,42 +36,9 @@ func ScanDirectoryForJobs(appConfig config.AppConfig) <-chan ScannedJobResult {
 			}
 
 			if !info.IsDir() {
-				srcBasePath, err := filepath.Rel(appConfig.OriginalsPath, path)
-				if err != nil {
-					jobChan <- ScannedJobResult{}.NewFromError(err)
-					return err
+				for job := range createJobsForOriginal(appConfig, path) {
+					jobChan <- ScannedJobResult{}.NewFromJob(job)
 				}
-				srcBasePath = filepath.Dir(srcBasePath)
-				optimizedPath := filepath.Join(appConfig.OptimizedPath, srcBasePath)
-
-				jobChan <- ScannedJobResult{}.NewFromJob(core.ImageJob{
-					OriginalPath:     path,
-					OptimizedPath:    filepath.Join(optimizedPath, info.Name()+"@large.webp"),
-					OptimizedType:    bimg.WEBP,
-					OptimizedQuality: 80,
-					OptimizedMaxSize: appConfig.ImageSizes.Large,
-				})
-				jobChan <- ScannedJobResult{}.NewFromJob(core.ImageJob{
-					OriginalPath:     path,
-					OptimizedPath:    filepath.Join(optimizedPath, info.Name()+"@medium.webp"),
-					OptimizedType:    bimg.WEBP,
-					OptimizedQuality: 80,
-					OptimizedMaxSize: appConfig.ImageSizes.Medium,
-				})
-				jobChan <- ScannedJobResult{}.NewFromJob(core.ImageJob{
-					OriginalPath:     path,
-					OptimizedPath:    filepath.Join(optimizedPath, info.Name()+"@small.webp"),
-					OptimizedType:    bimg.WEBP,
-					OptimizedQuality: 60,
-					OptimizedMaxSize: appConfig.ImageSizes.Small,
-				})
-				jobChan <- ScannedJobResult{}.NewFromJob(core.ImageJob{
-					OriginalPath:     path,
-					OptimizedPath:    filepath.Join(optimizedPath, info.Name()+"@thumbnail.webp"),
-					OptimizedType:    bimg.WEBP,
-					OptimizedQuality: 20,
-					OptimizedMaxSize: appConfig.ImageSizes.Thumbnail,
-				})
 			}
 			return nil
 		})
