@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"log"
+	"os"
 	"time"
 
 	"github.com/enchant97/image-optimizer/config"
@@ -39,11 +40,17 @@ func Run(appConfig config.AppConfig, rabbitMQ core.RabbitMQ) error {
 			if jobResult.Err != nil {
 				log.Println("error scanning directory:", jobResult.Err)
 			} else {
-				if err := dispatchJob(jobResult.Job); err != nil {
-					log.Println("error dispatching job:", err)
+				if _, err := os.Stat(jobResult.Job.OptimizedPath); os.IsNotExist(err) {
+					if err := dispatchJob(jobResult.Job); err != nil {
+						log.Println("error publishing job:", err)
+					} else {
+						log.Println("published job:", jobResult.Job)
+					}
+				} else {
+					log.Println("skipping publish of job, as already is optimized:", jobResult.Job)
 				}
 			}
-			log.Println("published job:", jobResult.Job)
+
 		}
 	}
 
