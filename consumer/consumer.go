@@ -32,7 +32,7 @@ func Run(appConfig config.AppConfig, rabbitMQ core.RabbitMQ) error {
 		log.Println("picked up new job:", imageJob)
 		if err := imageJob.Run(); err != nil {
 			log.Println("error running job, requeuing:", err)
-			job.Nack(false, true)
+			job.Nack(false, false)
 			continue
 		}
 		core.PanicOnError(job.Ack(false))
