@@ -13,12 +13,12 @@ type ImageSizes struct {
 }
 
 type PublisherConfig struct {
-	Enable     bool `env:"PUBLISHER" envDefault:"false"`
+	Enable     bool `env:"ENABLE" envDefault:"false"`
 	ScanBefore bool `env:"SCAN_BEFORE" envDefault:"false"`
 }
 
 type ConsumerConfig struct {
-	Enable bool `env:"CONSUMER" envDefault:"false"`
+	Enable bool `env:"ENABLE" envDefault:"false"`
 }
 
 type AppConfig struct {
