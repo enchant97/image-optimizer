@@ -22,10 +22,12 @@ func main() {
 		}
 
 		if !info.IsDir() {
-			srcBasePath, _ := filepath.Rel(appConfig.OriginalsPath, path)
+			srcBasePath, err := filepath.Rel(appConfig.OriginalsPath, path)
+			if err != nil {
+				return err
+			}
 			srcBasePath = filepath.Dir(srcBasePath)
 			optimizedPath := filepath.Join(appConfig.OptimizedPath, srcBasePath)
-			os.MkdirAll(optimizedPath, os.ModePerm)
 
 			log.Println("adding job(s) for", path)
 
