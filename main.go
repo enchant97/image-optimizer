@@ -76,7 +76,7 @@ func runPublisher(appConfig config.AppConfig, rabbitMQ RabbitMQ) error {
 		)
 	}
 
-	if appConfig.PublisherScan {
+	if appConfig.Publisher.ScanBefore {
 		log.Println("scanning input path for new images")
 
 		return filepath.WalkDir(appConfig.OriginalsPath, func(path string, info os.DirEntry, err error) error {
@@ -170,11 +170,11 @@ func main() {
 	var appConfig config.AppConfig
 	panicOnError(appConfig.ParseConfig())
 
-	if !appConfig.Consumer && !appConfig.Publisher {
+	if !appConfig.Consumer.Enable && !appConfig.Publisher.Enable {
 		log.Fatalln("either (or both) 'CONSUMER' or 'PUBLISHER' must be enabled")
 	}
 
-	if appConfig.Publisher {
+	if appConfig.Publisher.Enable {
 		go func() {
 			rabbitMQ := RabbitMQ{}
 			panicOnError(rabbitMQ.Connect(appConfig.AMPQConfig))
@@ -183,7 +183,7 @@ func main() {
 		}()
 	}
 
-	if appConfig.Consumer {
+	if appConfig.Consumer.Enable {
 		go func() {
 			rabbitMQ := RabbitMQ{}
 			panicOnError(rabbitMQ.Connect(appConfig.AMPQConfig))

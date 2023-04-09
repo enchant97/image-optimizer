@@ -12,12 +12,20 @@ type ImageSizes struct {
 	Thumbnail uint `env:"THUMBNAIL" envDefault:"100"`
 }
 
+type PublisherConfig struct {
+	Enable     bool `env:"PUBLISHER" envDefault:"false"`
+	ScanBefore bool `env:"SCAN_BEFORE" envDefault:"false"`
+}
+
+type ConsumerConfig struct {
+	Enable bool `env:"CONSUMER" envDefault:"false"`
+}
+
 type AppConfig struct {
-	AMPQConfig    AMPQConfig `envPrefix:"AMPQ__"`
-	ImageSizes    ImageSizes `envPrefix:"IMAGE_SIZES__"`
-	OriginalsPath string     `env:"ORIGINALS_PATH,notEmpty"`
-	OptimizedPath string     `env:"OPTIMIZED_PATH,notEmpty"`
-	Publisher     bool       `env:"PUBLISHER" envDefault:"false"`
-	Consumer      bool       `env:"CONSUMER" envDefault:"false"`
-	PublisherScan bool       `env:"PUBLISHER_SCAN" envDefault:"false"`
+	AMPQConfig    AMPQConfig      `envPrefix:"AMPQ__"`
+	ImageSizes    ImageSizes      `envPrefix:"IMAGE_SIZES__"`
+	Publisher     PublisherConfig `envPrefix:"PUBLISHER__"`
+	Consumer      ConsumerConfig  `envPrefix:"CONSUMER__"`
+	OriginalsPath string          `env:"ORIGINALS_PATH,notEmpty"`
+	OptimizedPath string          `env:"OPTIMIZED_PATH,notEmpty"`
 }
