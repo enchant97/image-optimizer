@@ -76,6 +76,7 @@ func ScanDirectoryForJobs(appConfig config.AppConfig) <-chan ScannedJobResult {
 			}
 			return nil
 		})
+		close(jobChan)
 	}()
 
 	return jobChan
