@@ -1,6 +1,7 @@
 package publisher
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
 	"log"
@@ -13,6 +14,7 @@ import (
 	"github.com/enchant97/image-optimizer/core"
 	"github.com/h2non/bimg"
 	"github.com/labstack/echo/v4"
+	"github.com/labstack/echo/v4/middleware"
 	amqp "github.com/rabbitmq/amqp091-go"
 )
 
@@ -107,6 +109,34 @@ func Run(appConfig config.AppConfig, rabbitMQ core.RabbitMQ) error {
 	e.POST("/api/optimize/:path", func(c echo.Context) error {
 		path := c.Param("path")
 		originalPath := filepath.Join(appConfig.OriginalsPath, path)
+
+		var bodyBytes bytes.Buffer
+
+		if _, err := bodyBytes.ReadFrom(c.Request().Body); err != nil {
+			return c.NoContent(http.StatusBadRequest)
+		}
+
+		if bodyBytes.Len() == 0 {
+			// if no body is provided, assume the file already exists
+			if _, err := os.Stat(originalPath); os.IsNotExist(err) {
+				return c.NoContent(http.StatusNotFound)
+			}
+		} else {
+			// if body is provided, assume the file is being uploaded
+			// don't allow overwriting existing files
+			if _, err := os.Stat(filepath.Dir(originalPath)); os.IsExist(err) {
+				return c.NoContent(http.StatusConflict)
+			}
+			// ensure original directory path exists
+			if err := os.MkdirAll(filepath.Dir(originalPath), os.ModePerm); err != nil {
+				return c.NoContent(http.StatusInternalServerError)
+			}
+			// write to disk
+			if err := os.WriteFile(originalPath, bodyBytes.Bytes(), 0644); err != nil {
+				return c.NoContent(http.StatusInternalServerError)
+			}
+		}
+		// publish optimization jobs
 		for job := range createJobsForOriginal(appConfig, originalPath) {
 			if err := dispatchJob(job); err != nil {
 				log.Println("error publishing job:", err)
@@ -114,8 +144,9 @@ func Run(appConfig config.AppConfig, rabbitMQ core.RabbitMQ) error {
 			}
 			log.Println("published job:", job)
 		}
+
 		return c.NoContent(http.StatusNoContent)
-	})
+	}, middleware.BodyLimit(appConfig.Publisher.MaxUploadSize))
 
 	return e.Start(":8000")
 }

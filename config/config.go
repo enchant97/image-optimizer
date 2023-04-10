@@ -13,8 +13,9 @@ type ImageSizes struct {
 }
 
 type PublisherConfig struct {
-	Enable     bool `env:"ENABLE" envDefault:"false"`
-	ScanBefore bool `env:"SCAN_BEFORE" envDefault:"false"`
+	Enable        bool   `env:"ENABLE" envDefault:"false"`
+	ScanBefore    bool   `env:"SCAN_BEFORE" envDefault:"false"`
+	MaxUploadSize string `env:"MAX_UPLOAD_SIZE" envDefault:"16M"`
 }
 
 type ConsumerConfig struct {
