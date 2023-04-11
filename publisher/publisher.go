@@ -108,6 +108,28 @@ func Run(appConfig config.AppConfig, rabbitMQ core.RabbitMQ) error {
 	e := echo.New()
 	e.POST("/api/optimize/:path", func(c echo.Context) error {
 		path := c.Param("path")
+
+		if len(appConfig.Publisher.ApiKey) != 0 {
+			// if api key is set, validate against request header
+			// get base64 encoded key from header
+			rawApiKey := c.Request().Header.Get("X-Api-Key")
+			if len(rawApiKey) == 0 {
+				// no key provided
+				return c.NoContent(http.StatusUnauthorized)
+			}
+			// decode key from base64
+			apiKey := config.Base64Decoded{}
+			if err := apiKey.UnmarshalText([]byte(rawApiKey)); err != nil {
+				// invalid base64
+				return c.NoContent(http.StatusUnauthorized)
+			}
+			// compare key
+			if !appConfig.Publisher.CompareApiKey(apiKey) {
+				// invalid key
+				return c.NoContent(http.StatusUnauthorized)
+			}
+		}
+
 		originalPath := filepath.Join(appConfig.OriginalsPath, path)
 
 		var bodyBytes bytes.Buffer
