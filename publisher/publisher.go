@@ -97,6 +97,16 @@ func (jp *JobPublisher) PublishJob(job core.ImageJob) error {
 	)
 }
 
+// publish multiple jobs to rabbitMQ
+func (jp *JobPublisher) PublishJobs(jobs <-chan core.ImageJob) error {
+	for job := range jobs {
+		if err := jp.PublishJob(job); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
 func Run(appConfig config.AppConfig, rabbitMQ core.RabbitMQ) error {
 	jobPublisher := JobPublisher{}.New(rabbitMQ)
 	defer jobPublisher.Cancel()

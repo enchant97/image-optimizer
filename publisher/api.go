@@ -2,7 +2,6 @@ package publisher
 
 import (
 	"bytes"
-	"log"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -85,14 +84,11 @@ func postOptimiseOriginal(c echo.Context) error {
 		}
 	}
 	// publish optimization jobs
-	for job := range createJobsForOriginal(appConfig, originalPath) {
-		if err := jobPublisher.PublishJob(job); err != nil {
-			log.Println("error publishing job:", err)
-			return c.NoContent(http.StatusInternalServerError)
-		}
-		log.Println("published job:", job)
+	jobsChannel := createJobsForOriginal(appConfig, originalPath)
+	if err := jobPublisher.PublishJobs(jobsChannel); err != nil {
+		c.Logger().Error("error publishing job:", err)
+		return c.NoContent(http.StatusInternalServerError)
 	}
-
 	return c.NoContent(http.StatusNoContent)
 }
 
