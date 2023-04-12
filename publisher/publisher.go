@@ -153,8 +153,9 @@ func (jp *JobPublisher) PublishJob(job core.ImageJob) error {
 		false,                  // mandatory
 		false,                  // immediate
 		amqp.Publishing{
-			ContentType: "application/json",
-			Body:        jobBytes,
+			DeliveryMode: amqp.Persistent,
+			ContentType:  "application/json",
+			Body:         jobBytes,
 		},
 	)
 }

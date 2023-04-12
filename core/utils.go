@@ -47,9 +47,12 @@ func (r *RabbitMQ) Connect(config config.AMPQConfig) error {
 	if err != nil {
 		return err
 	}
+	if err := ch.Qos(1, 0, false); err != nil {
+		return err
+	}
 	q, err := ch.QueueDeclare(
 		config.QueueName, // name
-		false,            // durable
+		true,             // durable
 		false,            // delete when unused
 		false,            // exclusive
 		false,            // no-wait
