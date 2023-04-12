@@ -9,9 +9,22 @@ type AMPQConfig struct {
 
 type ImageSizes struct {
 	Large     uint `env:"LARGE" envDefault:"2500"`
-	Medium    uint `env:"MED" envDefault:"1000"`
+	Medium    uint `env:"MEDIUM" envDefault:"1000"`
 	Small     uint `env:"SMALL" envDefault:"400"`
 	Thumbnail uint `env:"THUMBNAIL" envDefault:"100"`
+}
+
+type ImageQuality struct {
+	Large     uint `env:"LARGE" envDefault:"80"`
+	Medium    uint `env:"MEDIUM" envDefault:"80"`
+	Small     uint `env:"SMALL" envDefault:"60"`
+	Thumbnail uint `env:"THUMBNAIL" envDefault:"20"`
+}
+
+type ImageFormats struct {
+	WebP bool `env:"WEBP" envDefault:"true"`
+	JPEG bool `env:"JPEG" envDefault:"false"`
+	AVIF bool `env:"AVIF" envDefault:"false"`
 }
 
 type PublisherConfig struct {
@@ -32,6 +45,8 @@ type ConsumerConfig struct {
 type AppConfig struct {
 	AMPQConfig    AMPQConfig      `envPrefix:"AMPQ__"`
 	ImageSizes    ImageSizes      `envPrefix:"IMAGE_SIZES__"`
+	ImageQuality  ImageQuality    `envPrefix:"IMAGE_QUALITY__"`
+	ImageFormats  ImageFormats    `envPrefix:"IMAGE_FORMATS__"`
 	Publisher     PublisherConfig `envPrefix:"PUBLISHER__"`
 	Consumer      ConsumerConfig  `envPrefix:"CONSUMER__"`
 	OriginalsPath string          `env:"ORIGINALS_PATH,notEmpty"`
