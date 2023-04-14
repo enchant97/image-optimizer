@@ -37,7 +37,7 @@ type PublisherConfig struct {
 	Enable        bool                    `yaml:"enable"`
 	ScanBefore    bool                    `yaml:"scanBefore"`
 	MaxUploadSize string                  `yaml:"maxUploadSize" validate:"required"`
-	ApiKey        Base64Decoded           `yaml:"apiKey" validate:"required"`
+	ApiKey        Base64Decoded           `yaml:"apiKey"`
 	Optimizations []OptimizationJobConfig `yaml:"optimizations"`
 }
 

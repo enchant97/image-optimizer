@@ -1,0 +1,48 @@
+ampq:
+  uri: "amqp://guest:guest@localhost:5672/"
+  queueName: "image_optimizer"
+
+storage:
+  originals: "./data/in"
+  optimized: "./data/out"
+
+consumer:
+  enable: true
+
+publisher:
+  enable: true
+  scanBefore: true
+  maxUploadSize: "16M"
+  # base64 authorization api key
+  apiKey: ""
+  optimizations:
+    - name: "large"
+      maxWidth: 2500
+      formats:
+        jpeg:
+          enable: true
+          quality: 80
+    - name: "medium"
+      maxWidth: 1000
+      formats:
+        jpeg:
+          enable: true
+          quality: 80
+        webp:
+          enable: true
+          quality: 80
+    - name: "small"
+      maxWidth: 400
+      formats:
+        webp:
+          enable: true
+          quality: 60
+    - name: "thumbnail"
+      maxWidth: 100
+      formats:
+        webp:
+          enable: true
+          quality: 20
+        avif:
+          enable: true
+          quality: 20
