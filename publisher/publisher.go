@@ -3,6 +3,7 @@ package publisher
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"log"
 	"os"
 	"path/filepath"
@@ -18,102 +19,41 @@ func createJobsForOriginal(appConfig config.AppConfig, path string) <-chan core.
 	jobChan := make(chan core.ImageJob)
 
 	name := filepath.Base(path)
-	srcBasePath, err := filepath.Rel(appConfig.OriginalsPath, path)
+	srcBasePath, err := filepath.Rel(appConfig.Storage.Originals, path)
 	if err != nil {
 		log.Panicln("Error while getting relative path", err)
 	}
 
 	go func() {
 		srcBasePath = filepath.Dir(srcBasePath)
-		optimizedPath := filepath.Join(appConfig.OptimizedPath, srcBasePath)
-		if appConfig.ImageFormats.WebP {
-			jobChan <- core.ImageJob{
-				OriginalPath:     path,
-				OptimizedPath:    filepath.Join(optimizedPath, name+"@large.webp"),
-				OptimizedType:    bimg.WEBP,
-				OptimizedQuality: appConfig.ImageQuality.Large,
-				OptimizedMaxSize: appConfig.ImageSizes.Large,
+		optimizedPath := filepath.Join(appConfig.Storage.Optimized, srcBasePath)
+		for _, optimization := range appConfig.Publisher.Optimizations {
+			if optimization.Formats.JPEG.Enable {
+				jobChan <- core.ImageJob{
+					OriginalPath:     path,
+					OptimizedPath:    filepath.Join(optimizedPath, fmt.Sprintf("%s@%s.jpeg", name, optimization.Name)),
+					OptimizedType:    bimg.JPEG,
+					OptimizedQuality: optimization.Formats.JPEG.Quality,
+					OptimizedMaxSize: optimization.MaxWidth,
+				}
 			}
-			jobChan <- core.ImageJob{
-				OriginalPath:     path,
-				OptimizedPath:    filepath.Join(optimizedPath, name+"@medium.webp"),
-				OptimizedType:    bimg.WEBP,
-				OptimizedQuality: appConfig.ImageQuality.Medium,
-				OptimizedMaxSize: appConfig.ImageSizes.Medium,
+			if optimization.Formats.WebP.Enable {
+				jobChan <- core.ImageJob{
+					OriginalPath:     path,
+					OptimizedPath:    filepath.Join(optimizedPath, fmt.Sprintf("%s@%s.webp", name, optimization.Name)),
+					OptimizedType:    bimg.WEBP,
+					OptimizedQuality: optimization.Formats.WebP.Quality,
+					OptimizedMaxSize: optimization.MaxWidth,
+				}
 			}
-			jobChan <- core.ImageJob{
-				OriginalPath:     path,
-				OptimizedPath:    filepath.Join(optimizedPath, name+"@small.webp"),
-				OptimizedType:    bimg.WEBP,
-				OptimizedQuality: appConfig.ImageQuality.Small,
-				OptimizedMaxSize: appConfig.ImageSizes.Small,
-			}
-			jobChan <- core.ImageJob{
-				OriginalPath:     path,
-				OptimizedPath:    filepath.Join(optimizedPath, name+"@thumbnail.webp"),
-				OptimizedType:    bimg.WEBP,
-				OptimizedQuality: appConfig.ImageQuality.Thumbnail,
-				OptimizedMaxSize: appConfig.ImageSizes.Thumbnail,
-			}
-		}
-		if appConfig.ImageFormats.JPEG {
-			jobChan <- core.ImageJob{
-				OriginalPath:     path,
-				OptimizedPath:    filepath.Join(optimizedPath, name+"@large.jpg"),
-				OptimizedType:    bimg.JPEG,
-				OptimizedQuality: appConfig.ImageQuality.Large,
-				OptimizedMaxSize: appConfig.ImageSizes.Large,
-			}
-			jobChan <- core.ImageJob{
-				OriginalPath:     path,
-				OptimizedPath:    filepath.Join(optimizedPath, name+"@medium.jpg"),
-				OptimizedType:    bimg.JPEG,
-				OptimizedQuality: appConfig.ImageQuality.Medium,
-				OptimizedMaxSize: appConfig.ImageSizes.Medium,
-			}
-			jobChan <- core.ImageJob{
-				OriginalPath:     path,
-				OptimizedPath:    filepath.Join(optimizedPath, name+"@small.jpg"),
-				OptimizedType:    bimg.JPEG,
-				OptimizedQuality: appConfig.ImageQuality.Small,
-				OptimizedMaxSize: appConfig.ImageSizes.Small,
-			}
-			jobChan <- core.ImageJob{
-				OriginalPath:     path,
-				OptimizedPath:    filepath.Join(optimizedPath, name+"@thumbnail.jpg"),
-				OptimizedType:    bimg.JPEG,
-				OptimizedQuality: appConfig.ImageQuality.Thumbnail,
-				OptimizedMaxSize: appConfig.ImageSizes.Thumbnail,
-			}
-		}
-		if appConfig.ImageFormats.AVIF {
-			jobChan <- core.ImageJob{
-				OriginalPath:     path,
-				OptimizedPath:    filepath.Join(optimizedPath, name+"@large.avif"),
-				OptimizedType:    bimg.AVIF,
-				OptimizedQuality: appConfig.ImageQuality.Large,
-				OptimizedMaxSize: appConfig.ImageSizes.Large,
-			}
-			jobChan <- core.ImageJob{
-				OriginalPath:     path,
-				OptimizedPath:    filepath.Join(optimizedPath, name+"@medium.avif"),
-				OptimizedType:    bimg.AVIF,
-				OptimizedQuality: appConfig.ImageQuality.Medium,
-				OptimizedMaxSize: appConfig.ImageSizes.Medium,
-			}
-			jobChan <- core.ImageJob{
-				OriginalPath:     path,
-				OptimizedPath:    filepath.Join(optimizedPath, name+"@small.avif"),
-				OptimizedType:    bimg.AVIF,
-				OptimizedQuality: appConfig.ImageQuality.Small,
-				OptimizedMaxSize: appConfig.ImageSizes.Small,
-			}
-			jobChan <- core.ImageJob{
-				OriginalPath:     path,
-				OptimizedPath:    filepath.Join(optimizedPath, name+"@thumbnail.avif"),
-				OptimizedType:    bimg.AVIF,
-				OptimizedQuality: appConfig.ImageQuality.Thumbnail,
-				OptimizedMaxSize: appConfig.ImageSizes.Thumbnail,
+			if optimization.Formats.AVIF.Enable {
+				jobChan <- core.ImageJob{
+					OriginalPath:     path,
+					OptimizedPath:    filepath.Join(optimizedPath, fmt.Sprintf("%s@%s.avif", name, optimization.Name)),
+					OptimizedType:    bimg.AVIF,
+					OptimizedQuality: optimization.Formats.AVIF.Quality,
+					OptimizedMaxSize: optimization.MaxWidth,
+				}
 			}
 		}
 		close(jobChan)

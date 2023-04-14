@@ -55,7 +55,7 @@ func postOptimiseOriginal(c echo.Context) error {
 		}
 	}
 
-	originalPath := filepath.Join(appConfig.OriginalsPath, path)
+	originalPath := filepath.Join(appConfig.Storage.Originals, path)
 
 	var bodyBytes bytes.Buffer
 

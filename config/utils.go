@@ -3,16 +3,34 @@ package config
 import (
 	"encoding/base64"
 	"errors"
+	"os"
 
-	"github.com/caarlos0/env/v6"
+	"github.com/go-playground/validator/v10"
+	"gopkg.in/yaml.v3"
 )
 
-// Load the config from OS
 func (appConfig *AppConfig) ParseConfig() error {
-	if err := env.Parse(appConfig); err != nil {
+	var rawConfig []byte
+	var err error
+
+	if customPath, isSet := os.LookupEnv("IM_CONFIG_FILE"); isSet {
+		rawConfig, err = os.ReadFile(customPath)
+		if err != nil {
+			return err
+		}
+	} else {
+		rawConfig, err = os.ReadFile("config.yaml")
+		if err != nil {
+			return err
+		}
+	}
+
+	if err := yaml.Unmarshal(rawConfig, &appConfig); err != nil {
 		return err
 	}
-	return nil
+
+	validate := validator.New()
+	return validate.Struct(appConfig)
 }
 
 type Base64Decoded []byte

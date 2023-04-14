@@ -29,7 +29,7 @@ func ScanDirectoryForJobs(appConfig config.AppConfig) <-chan ScannedJobResult {
 	jobChan := make(chan ScannedJobResult)
 
 	go func() {
-		filepath.WalkDir(appConfig.OriginalsPath, func(path string, info os.DirEntry, err error) error {
+		filepath.WalkDir(appConfig.Storage.Originals, func(path string, info os.DirEntry, err error) error {
 			if err != nil {
 				jobChan <- ScannedJobResult{}.NewFromError(err)
 				return err

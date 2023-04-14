@@ -7,14 +7,9 @@ import (
 	"github.com/enchant97/image-optimizer/consumer"
 	"github.com/enchant97/image-optimizer/core"
 	"github.com/enchant97/image-optimizer/publisher"
-	"github.com/joho/godotenv"
 )
 
 func main() {
-	// Load environment variables from .env file
-	if err := godotenv.Load(); err == nil {
-		log.Println("loaded environment variables from .env file")
-	}
 	// Parse config
 	var appConfig config.AppConfig
 	core.PanicOnError(appConfig.ParseConfig())
