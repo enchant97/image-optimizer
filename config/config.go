@@ -13,7 +13,6 @@ type StorageConfig struct {
 }
 
 type ConsumerConfig struct {
-	Enable bool `yaml:"enable"`
 }
 
 type OptimizationJobFormatConfig struct {
@@ -34,7 +33,6 @@ type OptimizationJobConfig struct {
 }
 
 type PublisherConfig struct {
-	Enable        bool                    `yaml:"enable"`
 	ScanBefore    bool                    `yaml:"scanBefore"`
 	MaxUploadSize string                  `yaml:"maxUploadSize" validate:"required"`
 	ApiKey        Base64Decoded           `yaml:"apiKey"`
@@ -45,9 +43,14 @@ func (c *PublisherConfig) CompareApiKey(otherKey Base64Decoded) bool {
 	return subtle.ConstantTimeCompare(c.ApiKey, otherKey) == 1
 }
 
-type AppConfig struct {
+type ConsumerAppConfig struct {
+	AMPQConfig AMPQConfig     `yaml:"ampq" validate:"required"`
+	Storage    StorageConfig  `yaml:"storage" validate:"required"`
+	Consumer   ConsumerConfig `yaml:"consumer" validate:"required"`
+}
+
+type PublisherAppConfig struct {
 	AMPQConfig AMPQConfig      `yaml:"ampq" validate:"required"`
 	Storage    StorageConfig   `yaml:"storage" validate:"required"`
-	Consumer   ConsumerConfig  `yaml:"consumer" validate:"required"`
 	Publisher  PublisherConfig `yaml:"publisher" validate:"required"`
 }

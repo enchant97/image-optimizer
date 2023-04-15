@@ -25,7 +25,7 @@ func (r ScannedJobResult) NewFromError(err error) ScannedJobResult {
 	}
 }
 
-func ScanDirectoryForJobs(appConfig config.AppConfig) <-chan ScannedJobResult {
+func ScanDirectoryForJobs(appConfig config.PublisherAppConfig) <-chan ScannedJobResult {
 	jobChan := make(chan ScannedJobResult)
 
 	go func() {

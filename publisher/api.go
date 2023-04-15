@@ -11,10 +11,10 @@ import (
 	"github.com/labstack/echo/v4/middleware"
 )
 
-func appConfigMiddleware(appConfig config.AppConfig) echo.MiddlewareFunc {
+func appConfigMiddleware(appConfig config.PublisherAppConfig) echo.MiddlewareFunc {
 	return func(next echo.HandlerFunc) echo.HandlerFunc {
 		return func(c echo.Context) error {
-			c.Set("AppConfig", appConfig)
+			c.Set("PublisherAppConfig", appConfig)
 			return next(c)
 		}
 	}
@@ -30,7 +30,7 @@ func jobPublisherMiddleware(jobPublisher JobPublisher) echo.MiddlewareFunc {
 }
 
 func postOptimiseOriginal(c echo.Context) error {
-	appConfig := c.Get("AppConfig").(config.AppConfig)
+	appConfig := c.Get("PublisherAppConfig").(config.PublisherAppConfig)
 	jobPublisher := c.Get("JobPublisher").(*JobPublisher)
 	path := c.Param("path")
 
@@ -92,7 +92,7 @@ func postOptimiseOriginal(c echo.Context) error {
 	return c.NoContent(http.StatusNoContent)
 }
 
-func RunApiServer(appConfig config.AppConfig, jobPublisher JobPublisher) error {
+func RunApiServer(appConfig config.PublisherAppConfig, jobPublisher JobPublisher) error {
 	e := echo.New()
 
 	e.POST(

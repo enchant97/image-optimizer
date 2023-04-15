@@ -8,7 +8,7 @@ import (
 	"github.com/enchant97/image-optimizer/core"
 )
 
-func Run(appConfig config.AppConfig, rabbitMQ core.RabbitMQ) error {
+func Run(appConfig config.ConsumerAppConfig, rabbitMQ core.RabbitMQ) error {
 	jobs, err := rabbitMQ.Ch.Consume(
 		rabbitMQ.Queue.Name, // queue
 		"",                  // consumer

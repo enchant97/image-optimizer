@@ -2,6 +2,8 @@ package main
 
 import (
 	"log"
+	"os"
+	"strings"
 
 	"github.com/enchant97/image-optimizer/config"
 	"github.com/enchant97/image-optimizer/consumer"
@@ -10,29 +12,43 @@ import (
 )
 
 func main() {
-	// Parse config
-	var appConfig config.AppConfig
-	core.PanicOnError(appConfig.ParseConfig())
+	var consumerConfig *config.ConsumerAppConfig
+	var publisherConfig *config.PublisherAppConfig
 
-	if !appConfig.Consumer.Enable && !appConfig.Publisher.Enable {
-		log.Fatalln("either (or both) 'CONSUMER' or 'PUBLISHER' must be enabled")
+	if mode, isSet := os.LookupEnv("IO_MODE"); isSet {
+		mode = strings.ToUpper(mode)
+		switch mode {
+		case "BOTH":
+			consumerConfig = &config.ConsumerAppConfig{}
+			publisherConfig = &config.PublisherAppConfig{}
+			core.PanicOnError(consumerConfig.ParseConfig())
+			core.PanicOnError(publisherConfig.ParseConfig())
+		case "CONSUMER":
+			consumerConfig = &config.ConsumerAppConfig{}
+			core.PanicOnError(consumerConfig.ParseConfig())
+		case "PUBLISHER":
+			publisherConfig = &config.PublisherAppConfig{}
+			core.PanicOnError(publisherConfig.ParseConfig())
+		}
+	} else {
+		log.Fatalln("IO_MODE must be set, either 'CONSUMER', 'PUBLISHER' or 'BOTH'")
 	}
 
-	if appConfig.Publisher.Enable {
+	if publisherConfig != nil {
 		go func() {
 			rabbitMQ := core.RabbitMQ{}
-			core.PanicOnError(rabbitMQ.Connect(appConfig.AMPQConfig))
+			core.PanicOnError(rabbitMQ.Connect(publisherConfig.AMPQConfig))
 			defer rabbitMQ.Close()
-			core.PanicOnError(publisher.Run(appConfig, rabbitMQ))
+			core.PanicOnError(publisher.Run(*publisherConfig, rabbitMQ))
 		}()
 	}
 
-	if appConfig.Consumer.Enable {
+	if consumerConfig != nil {
 		go func() {
 			rabbitMQ := core.RabbitMQ{}
-			core.PanicOnError(rabbitMQ.Connect(appConfig.AMPQConfig))
+			core.PanicOnError(rabbitMQ.Connect(consumerConfig.AMPQConfig))
 			defer rabbitMQ.Close()
-			core.PanicOnError(consumer.Run(appConfig, rabbitMQ))
+			core.PanicOnError(consumer.Run(*consumerConfig, rabbitMQ))
 		}()
 	}
 

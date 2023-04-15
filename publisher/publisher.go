@@ -15,7 +15,7 @@ import (
 	amqp "github.com/rabbitmq/amqp091-go"
 )
 
-func createJobsForOriginal(appConfig config.AppConfig, path string) <-chan core.ImageJob {
+func createJobsForOriginal(appConfig config.PublisherAppConfig, path string) <-chan core.ImageJob {
 	jobChan := make(chan core.ImageJob)
 
 	name := filepath.Base(path)
@@ -110,7 +110,7 @@ func (jp *JobPublisher) PublishJobs(jobs <-chan core.ImageJob) error {
 	return nil
 }
 
-func Run(appConfig config.AppConfig, rabbitMQ core.RabbitMQ) error {
+func Run(appConfig config.PublisherAppConfig, rabbitMQ core.RabbitMQ) error {
 	jobPublisher := JobPublisher{}.New(rabbitMQ)
 	defer jobPublisher.Cancel()
 

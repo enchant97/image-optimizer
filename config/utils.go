@@ -9,11 +9,35 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
-func (appConfig *AppConfig) ParseConfig() error {
+func (appConfig *ConsumerAppConfig) ParseConfig() error {
 	var rawConfig []byte
 	var err error
 
-	if customPath, isSet := os.LookupEnv("IM_CONFIG_FILE"); isSet {
+	if customPath, isSet := os.LookupEnv("IO_CONFIG_FILE"); isSet {
+		rawConfig, err = os.ReadFile(customPath)
+		if err != nil {
+			return err
+		}
+	} else {
+		rawConfig, err = os.ReadFile("config.yaml")
+		if err != nil {
+			return err
+		}
+	}
+
+	if err := yaml.Unmarshal(rawConfig, &appConfig); err != nil {
+		return err
+	}
+
+	validate := validator.New()
+	return validate.Struct(appConfig)
+}
+
+func (appConfig *PublisherAppConfig) ParseConfig() error {
+	var rawConfig []byte
+	var err error
+
+	if customPath, isSet := os.LookupEnv("IO_CONFIG_FILE"); isSet {
 		rawConfig, err = os.ReadFile(customPath)
 		if err != nil {
 			return err

@@ -7,10 +7,8 @@ storage:
   optimized: "./data/out"
 
 consumer:
-  enable: true
 
 publisher:
-  enable: true
   scanBefore: true
   maxUploadSize: "16M"
   # base64 authorization api key
