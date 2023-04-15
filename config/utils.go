@@ -13,7 +13,7 @@ func (appConfig *ConsumerAppConfig) ParseConfig() error {
 	var rawConfig []byte
 	var err error
 
-	if customPath, isSet := os.LookupEnv("IO_CONFIG_FILE"); isSet {
+	if customPath, isSet := os.LookupEnv("IO_CONSUMER_CONFIG"); isSet {
 		rawConfig, err = os.ReadFile(customPath)
 		if err != nil {
 			return err
@@ -37,7 +37,7 @@ func (appConfig *PublisherAppConfig) ParseConfig() error {
 	var rawConfig []byte
 	var err error
 
-	if customPath, isSet := os.LookupEnv("IO_CONFIG_FILE"); isSet {
+	if customPath, isSet := os.LookupEnv("IO_PRODUCER_CONFIG"); isSet {
 		rawConfig, err = os.ReadFile(customPath)
 		if err != nil {
 			return err
