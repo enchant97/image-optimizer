@@ -3,6 +3,7 @@ package main
 import (
 	"log"
 	"os"
+	"os/signal"
 	"strings"
 
 	"github.com/enchant97/image-optimizer/config"
@@ -34,11 +35,16 @@ func main() {
 		log.Fatalln("IO_MODE must be set, either 'CONSUMER', 'PUBLISHER' or 'BOTH'")
 	}
 
+	waitForever := make(chan os.Signal, 1)
+	signal.Notify(waitForever, os.Interrupt)
+
+	sessions := make([]core.RabbitMQ, 1)
+
 	if publisherConfig != nil {
 		go func() {
 			rabbitMQ := core.RabbitMQ{}
 			core.PanicOnError(rabbitMQ.Connect(publisherConfig.AMPQConfig))
-			defer rabbitMQ.Close()
+			sessions = append(sessions, rabbitMQ)
 			core.PanicOnError(publisher.Run(*publisherConfig, rabbitMQ))
 		}()
 	}
@@ -47,12 +53,15 @@ func main() {
 		go func() {
 			rabbitMQ := core.RabbitMQ{}
 			core.PanicOnError(rabbitMQ.Connect(consumerConfig.AMPQConfig))
-			defer rabbitMQ.Close()
+			sessions = append(sessions, rabbitMQ)
 			core.PanicOnError(consumer.Run(*consumerConfig, rabbitMQ))
 		}()
 	}
 
-	var waitForever chan struct{}
 	log.Printf("running. To exit press CTRL+C")
 	<-waitForever
+	log.Println("exiting...")
+	for _, session := range sessions {
+		core.PanicOnError(session.Close())
+	}
 }

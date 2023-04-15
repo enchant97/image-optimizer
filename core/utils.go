@@ -29,6 +29,9 @@ type RabbitMQ struct {
 }
 
 func (r *RabbitMQ) Close() error {
+	if r.Ch == nil || r.Conn == nil {
+		return nil
+	}
 	if err := r.Ch.Close(); err != nil {
 		return err
 	}
