@@ -29,31 +29,38 @@ func jobPublisherMiddleware(jobPublisher JobPublisher) echo.MiddlewareFunc {
 	}
 }
 
+func requireAuthMiddleware(appConfig config.PublisherAppConfig) echo.MiddlewareFunc {
+	return func(next echo.HandlerFunc) echo.HandlerFunc {
+		return func(c echo.Context) error {
+			if len(appConfig.Publisher.ApiKey) != 0 {
+				// if api key is set, validate against request header
+				// get base64 encoded key from header
+				rawApiKey := c.Request().Header.Get("X-Api-Key")
+				if len(rawApiKey) == 0 {
+					// no key provided
+					return c.NoContent(http.StatusUnauthorized)
+				}
+				// decode key from base64
+				apiKey := config.Base64Decoded{}
+				if err := apiKey.UnmarshalText([]byte(rawApiKey)); err != nil {
+					// invalid base64
+					return c.NoContent(http.StatusUnauthorized)
+				}
+				// compare key
+				if !appConfig.Publisher.CompareApiKey(apiKey) {
+					// invalid key
+					return c.NoContent(http.StatusUnauthorized)
+				}
+			}
+			return next(c)
+		}
+	}
+}
+
 func postOptimiseOriginal(c echo.Context) error {
 	appConfig := c.Get("PublisherAppConfig").(config.PublisherAppConfig)
 	jobPublisher := c.Get("JobPublisher").(*JobPublisher)
 	path := c.Param("path")
-
-	if len(appConfig.Publisher.ApiKey) != 0 {
-		// if api key is set, validate against request header
-		// get base64 encoded key from header
-		rawApiKey := c.Request().Header.Get("X-Api-Key")
-		if len(rawApiKey) == 0 {
-			// no key provided
-			return c.NoContent(http.StatusUnauthorized)
-		}
-		// decode key from base64
-		apiKey := config.Base64Decoded{}
-		if err := apiKey.UnmarshalText([]byte(rawApiKey)); err != nil {
-			// invalid base64
-			return c.NoContent(http.StatusUnauthorized)
-		}
-		// compare key
-		if !appConfig.Publisher.CompareApiKey(apiKey) {
-			// invalid key
-			return c.NoContent(http.StatusUnauthorized)
-		}
-	}
 
 	originalPath := filepath.Join(appConfig.Storage.Originals, path)
 
@@ -100,6 +107,7 @@ func RunApiServer(appConfig config.PublisherAppConfig, jobPublisher JobPublisher
 		postOptimiseOriginal,
 		appConfigMiddleware(appConfig),
 		jobPublisherMiddleware(jobPublisher),
+		requireAuthMiddleware(appConfig),
 		middleware.BodyLimit(appConfig.Publisher.MaxUploadSize),
 	)
 
