@@ -57,6 +57,15 @@ func requireAuthMiddleware(appConfig config.PublisherAppConfig) echo.MiddlewareF
 	}
 }
 
+func postTriggerScan(c echo.Context) error {
+	appConfig := c.Get("PublisherAppConfig").(config.PublisherAppConfig)
+	jobPublisher := c.Get("JobPublisher").(*JobPublisher)
+
+	go scanForJobs(appConfig, *jobPublisher)
+
+	return c.NoContent(http.StatusNoContent)
+}
+
 func postOptimiseOriginal(c echo.Context) error {
 	appConfig := c.Get("PublisherAppConfig").(config.PublisherAppConfig)
 	jobPublisher := c.Get("JobPublisher").(*JobPublisher)
@@ -102,6 +111,13 @@ func postOptimiseOriginal(c echo.Context) error {
 func RunApiServer(appConfig config.PublisherAppConfig, jobPublisher JobPublisher) error {
 	e := echo.New()
 
+	e.POST(
+		"/api/scan/",
+		postTriggerScan,
+		appConfigMiddleware(appConfig),
+		jobPublisherMiddleware(jobPublisher),
+		requireAuthMiddleware(appConfig),
+	)
 	e.POST(
 		"/api/optimize/:path",
 		postOptimiseOriginal,

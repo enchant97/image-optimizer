@@ -110,28 +110,32 @@ func (jp *JobPublisher) PublishJobs(jobs <-chan core.ImageJob) error {
 	return nil
 }
 
+func scanForJobs(appConfig config.PublisherAppConfig, jobPublisher JobPublisher) {
+	log.Println("scanning input path for new images")
+
+	for jobResult := range ScanDirectoryForJobs(appConfig) {
+		if jobResult.Err != nil {
+			log.Println("error scanning directory:", jobResult.Err)
+		} else {
+			if _, err := os.Stat(jobResult.Job.OptimizedPath); os.IsNotExist(err) {
+				if err := jobPublisher.PublishJob(jobResult.Job); err != nil {
+					log.Println("error publishing job:", err)
+				} else {
+					log.Println("published job:", jobResult.Job)
+				}
+			} else {
+				log.Println("skipping publish of job, as already is optimized:", jobResult.Job)
+			}
+		}
+	}
+}
+
 func Run(appConfig config.PublisherAppConfig, rabbitMQ core.RabbitMQ) error {
 	jobPublisher := JobPublisher{}.New(rabbitMQ)
 	defer jobPublisher.Cancel()
 
 	if appConfig.Publisher.ScanBefore {
-		log.Println("scanning input path for new images")
-
-		for jobResult := range ScanDirectoryForJobs(appConfig) {
-			if jobResult.Err != nil {
-				log.Println("error scanning directory:", jobResult.Err)
-			} else {
-				if _, err := os.Stat(jobResult.Job.OptimizedPath); os.IsNotExist(err) {
-					if err := jobPublisher.PublishJob(jobResult.Job); err != nil {
-						log.Println("error publishing job:", err)
-					} else {
-						log.Println("published job:", jobResult.Job)
-					}
-				} else {
-					log.Println("skipping publish of job, as already is optimized:", jobResult.Job)
-				}
-			}
-		}
+		go scanForJobs(appConfig, jobPublisher)
 	}
 
 	return RunApiServer(appConfig, jobPublisher)
