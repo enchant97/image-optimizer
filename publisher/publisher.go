@@ -3,7 +3,6 @@ package publisher
 import (
 	"context"
 	"encoding/json"
-	"fmt"
 	"log"
 	"os"
 	"path/filepath"
@@ -18,7 +17,7 @@ import (
 func createJobsForOriginal(appConfig config.PublisherAppConfig, path string) <-chan core.ImageJob {
 	jobChan := make(chan core.ImageJob)
 
-	name := filepath.Base(path)
+	originalName := filepath.Base(path)
 	srcBasePath, err := filepath.Rel(appConfig.Storage.Originals, path)
 	if err != nil {
 		log.Panicln("Error while getting relative path", err)
@@ -27,11 +26,12 @@ func createJobsForOriginal(appConfig config.PublisherAppConfig, path string) <-c
 	go func() {
 		srcBasePath = filepath.Dir(srcBasePath)
 		optimizedPath := filepath.Join(appConfig.Storage.Optimized, srcBasePath)
+
 		for _, optimization := range appConfig.Publisher.Optimizations {
 			if optimization.Formats.JPEG.Enable {
 				jobChan <- core.ImageJob{
 					OriginalPath:     path,
-					OptimizedPath:    filepath.Join(optimizedPath, fmt.Sprintf("%s@%s.jpeg", name, optimization.Name)),
+					OptimizedPath:    core.MakeOptimizedPath(optimizedPath, originalName, optimization.Name, "jpeg"),
 					OptimizedType:    bimg.JPEG,
 					OptimizedQuality: optimization.Formats.JPEG.Quality,
 					OptimizedMaxSize: optimization.MaxWidth,
@@ -40,7 +40,7 @@ func createJobsForOriginal(appConfig config.PublisherAppConfig, path string) <-c
 			if optimization.Formats.WebP.Enable {
 				jobChan <- core.ImageJob{
 					OriginalPath:     path,
-					OptimizedPath:    filepath.Join(optimizedPath, fmt.Sprintf("%s@%s.webp", name, optimization.Name)),
+					OptimizedPath:    core.MakeOptimizedPath(optimizedPath, originalName, optimization.Name, "webp"),
 					OptimizedType:    bimg.WEBP,
 					OptimizedQuality: optimization.Formats.WebP.Quality,
 					OptimizedMaxSize: optimization.MaxWidth,
@@ -49,7 +49,7 @@ func createJobsForOriginal(appConfig config.PublisherAppConfig, path string) <-c
 			if optimization.Formats.AVIF.Enable {
 				jobChan <- core.ImageJob{
 					OriginalPath:     path,
-					OptimizedPath:    filepath.Join(optimizedPath, fmt.Sprintf("%s@%s.avif", name, optimization.Name)),
+					OptimizedPath:    core.MakeOptimizedPath(optimizedPath, originalName, optimization.Name, "avif"),
 					OptimizedType:    bimg.AVIF,
 					OptimizedQuality: optimization.Formats.AVIF.Quality,
 					OptimizedMaxSize: optimization.MaxWidth,

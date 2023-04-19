@@ -1,7 +1,9 @@
 package core
 
 import (
+	"fmt"
 	"log"
+	"path/filepath"
 
 	"github.com/enchant97/image-optimizer/config"
 	amqp "github.com/rabbitmq/amqp091-go"
@@ -20,6 +22,16 @@ func PanicOnError(err error) {
 	if err != nil {
 		log.Fatalln(err)
 	}
+}
+
+// Construct a optimized filename from given parts
+func MakeOptimizedFileName(originalName string, optimizationName string, extension string) string {
+	return fmt.Sprintf("%s@%s.%s", originalName, optimizationName, extension)
+}
+
+// Construct a optimized full-path from given parts
+func MakeOptimizedPath(basePath string, originalName string, optimizationName string, extension string) string {
+	return filepath.Join(basePath, MakeOptimizedFileName(originalName, optimizationName, extension))
 }
 
 type RabbitMQ struct {
