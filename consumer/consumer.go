@@ -26,17 +26,31 @@ func Run(appConfig config.ConsumerAppConfig, rabbitMQ core.RabbitMQ) error {
 		imageJob := core.ImageJob{}
 		if err := json.Unmarshal(job.Body, &imageJob); err != nil {
 			log.Println("error unmarshalling job:", err)
-			job.Nack(false, false)
+			core.PanicOnError(job.Nack(false, false))
 			continue
 		}
 		log.Println("picked up new job:", imageJob)
-		if err := imageJob.Run(); err != nil {
-			log.Println("error running job, requeuing:", err)
-			job.Nack(false, false)
-			continue
+
+		if !core.DoesFileExist(imageJob.OriginalPath) {
+			// original not found, needed for job
+			log.Println("error running job, original not found:", imageJob.OriginalPath)
+			core.PanicOnError(job.Nack(false, false))
+		} else if !core.DoesFileExist(imageJob.OptimizedPath) {
+			// optimized does not exist, so optimization can happen
+			if err := imageJob.Run(); err != nil {
+				// job failed
+				log.Println("error running job:", err)
+				core.PanicOnError(job.Nack(false, false))
+			} else {
+				// job finished ok
+				core.PanicOnError(job.Ack(false))
+				log.Println("finished job:", imageJob)
+			}
+		} else {
+			// optimized already found, so skip
+			log.Println("skipping job, optimized already exists:", imageJob.OptimizedPath)
+			core.PanicOnError(job.Ack(false))
 		}
-		core.PanicOnError(job.Ack(false))
-		log.Println("finished job:", imageJob)
 	}
 
 	return nil
