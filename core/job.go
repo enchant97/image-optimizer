@@ -14,6 +14,7 @@ type ImageJob struct {
 	OptimizedMaxSize uint
 	OptimizedType    bimg.ImageType
 	OptimizedQuality uint
+	Overwrite        bool
 }
 
 func (job *ImageJob) Run() error {

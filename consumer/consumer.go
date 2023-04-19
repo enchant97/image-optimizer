@@ -35,8 +35,8 @@ func Run(appConfig config.ConsumerAppConfig, rabbitMQ core.RabbitMQ) error {
 			// original not found, needed for job
 			log.Println("error running job, original not found:", imageJob.OriginalPath)
 			core.PanicOnError(job.Nack(false, false))
-		} else if !core.DoesFileExist(imageJob.OptimizedPath) {
-			// optimized does not exist, so optimization can happen
+		} else if imageJob.Overwrite || !core.DoesFileExist(imageJob.OptimizedPath) {
+			// optimized does not exist (or overwrite is set), so optimization can happen
 			if err := imageJob.Run(); err != nil {
 				// job failed
 				log.Println("error running job:", err)
