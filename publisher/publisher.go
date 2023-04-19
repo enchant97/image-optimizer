@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/json"
 	"log"
-	"os"
 	"path/filepath"
 	"time"
 
@@ -117,7 +116,7 @@ func scanForJobs(appConfig config.PublisherAppConfig, jobPublisher JobPublisher)
 		if jobResult.Err != nil {
 			log.Println("error scanning directory:", jobResult.Err)
 		} else {
-			if _, err := os.Stat(jobResult.Job.OptimizedPath); os.IsNotExist(err) {
+			if !core.DoesFileExist(jobResult.Job.OptimizedPath) {
 				if err := jobPublisher.PublishJob(jobResult.Job); err != nil {
 					log.Println("error publishing job:", err)
 				} else {

@@ -1,8 +1,11 @@
 package core
 
 import (
+	"errors"
 	"fmt"
+	"io/fs"
 	"log"
+	"os"
 	"path/filepath"
 
 	"github.com/enchant97/image-optimizer/config"
@@ -22,6 +25,14 @@ func PanicOnError(err error) {
 	if err != nil {
 		log.Fatalln(err)
 	}
+}
+
+// Check whether a file exists at given path
+func DoesFileExist(filePath string) bool {
+	if _, err := os.Stat(filePath); errors.Is(err, fs.ErrNotExist) {
+		return false
+	}
+	return true
 }
 
 // Construct a optimized filename from given parts

@@ -7,6 +7,7 @@ import (
 	"path/filepath"
 
 	"github.com/enchant97/image-optimizer/config"
+	"github.com/enchant97/image-optimizer/core"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
 )
@@ -81,13 +82,13 @@ func postOptimiseOriginal(c echo.Context) error {
 
 	if bodyBytes.Len() == 0 {
 		// if no body is provided, assume the file already exists
-		if _, err := os.Stat(originalPath); os.IsNotExist(err) {
+		if !core.DoesFileExist(originalPath) {
 			return c.NoContent(http.StatusNotFound)
 		}
 	} else {
 		// if body is provided, assume the file is being uploaded
 		// don't allow overwriting existing files
-		if _, err := os.Stat(filepath.Dir(originalPath)); os.IsExist(err) {
+		if core.DoesFileExist(filepath.Dir(originalPath)) {
 			return c.NoContent(http.StatusConflict)
 		}
 		// ensure original directory path exists
